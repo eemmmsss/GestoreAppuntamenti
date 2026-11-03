@@ -1,0 +1,19 @@
+self.addEventListener('install', (e) => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (e) => {
+  return self.clients.claim();
+});
+
+self.addEventListener('push', (e) => {
+  const data = e.data ? e.data.json() : {};
+  const title = data.title || 'Nuovo Appuntamento AutoCal';
+  const options = {
+    body: data.body || 'Un nuovo evento è stato sincronizzato nel calendario.',
+    icon: 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png',
+    badge: 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png'
+  };
+
+  e.waitUntil(self.registration.showNotification(title, options));
+});
