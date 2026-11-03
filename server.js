@@ -10,9 +10,8 @@ app.use(express.json());
 
 // Inizializzazione Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-// Endpoint di test per verificare che il server funzioni
+// Test endpoint per verificare il funzionamento del server
 app.get('/', (req, res) => {
   res.send('Server AutoCal AI Online e Funzionante!');
 });
@@ -22,27 +21,44 @@ app.post('/api/parse-document', async (req, res) => {
   try {
     const { testoDocumento } = req.body;
 
+    if (!testoDocumento) {
+      return res.status(400).json({ success: false, error: "Testo mancante" });
+    }
+
+    // Usiamo il modello gemini-1.5-flash imponendo la risposta in formato JSON nativo
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      generationConfig: { responseMimeType: "application/json" }
+    });
+
     const prompt = `
-      Analizza il seguente testo estratto da un documento o email ed estrai l'evento o appuntamento.
-      Rispondi ESCLUSIVAMENTE con un oggetto JSON valido senza formattazione markdown o altro testo:
+      Sei un assistente per la gestione del calendario. Analizza il seguente testo ed estrai le informazioni sull'evento o appuntamento.
+      Rispondi esclusivamente con questo schema JSON:
       {
-        "titolo": "Titolo sintetico dell'evento",
+        "titolo": "Titolo sintetico ed esplicito dell'evento",
         "dataOra": "YYYY-MM-DDTHH:MM",
-        "luogo": "Luogo dell'evento o link meeting",
+        "luogo": "Luogo dell'evento, link meeting oppure 'Non specificato'",
         "categoria": "Didattica|Lavoro|Urgente|Personale"
       }
-      Testo:
+      
+      Se l'anno non è specificato nel testo, usa l'anno 2026.
+      
+      Testo da analizzare:
       ${testoDocumento}
     `;
 
     const result = await model.generateContent(prompt);
-    const responseText = result.response.text().replace(/```json|```/g, '').trim();
-    const eventoEstratto = JSON.parse(responseText);
+    let rawText = result.response.text();
+
+    // Pulizia di sicurezza per rimuovere eventuali tag markdown residuali
+    rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    const eventoEstratto = JSON.parse(rawText);
 
     res.json({ success: true, evento: eventoEstratto });
   } catch (error) {
     console.error("Errore analisi AI:", error);
-    res.status(500).json({ success: false, error: "Errore durante l'analisi AI" });
+    res.status(500).json({ success: false, error: error.message || "Errore durante l'analisi AI" });
   }
 });
 
@@ -51,12 +67,17 @@ app.post('/api/add-to-google-calendar', async (req, res) => {
   try {
     const { userAccessToken, evento } = req.body;
 
+    if (!userAccessToken || !evento) {
+      return res.status(400).json({ success: false, error: "Parametri mancanti" });
+    }
+
     const oauth2Client = new google.auth.OAuth2();
     oauth2Client.setCredentials({ access_token: userAccessToken });
 
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
     const startDateTime = new Date(evento.dataOra);
+    // Imposta una durata predefinita di 1 ora
     const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000);
 
     const response = await calendar.events.insert({
