@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoCal AI Engine Ultra</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background-color: #030712;
+      color: #f3f4f6;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .glass {
+      background: rgba(17, 24, 39, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card {
+      background: rgba(31, 41, 55, 0.5);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .glow-purple { box-shadow: 0 0 25px rgba(168, 85, 247, 0.25); }
+    .glow-indigo { box-shadow: 0 0 25px rgba(99, 102, 241, 0.25); }
+  </style>
+</head>
+<body class="min-h-screen pb-12">
+  <!-- Header -->
+  <header class="glass sticky top-0 z-50 border-b border-gray-800 px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl shadow-lg glow-indigo">
+        <i class="fa-solid fa-calendar-check"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-lg tracking-wide bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">AutoCal AI Engine</h1>
+        <p class="text-xs text-gray-400">Sincronizzazione Automatica Gmail & PDF</p>
+      </div>
+    </div>
+    <button onclick="richiediNotifiche()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all shadow-md flex items-center gap-2">
+      <i class="fa-solid fa-bell"></i> Attiva Notifiche Push
+    </button>
+  </header>
+
+  <!-- Content Grid -->
+  <main class="max-w-7xl mx-auto px-4 mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Panel 1: Gmail Simulator -->
+    <section class="glass rounded-2xl p-6 flex flex-col justify-between">
+      <div>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="font-bold text-lg flex items-center gap-2 text-indigo-400">
+            <i class="fa-solid fa-envelope"></i> Gmail Inbox Simulator
+          </h2>
+          <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-500/30">API Pronta</span>
+        </div>
+        <p class="text-xs text-gray-400 mb-4">Simula la ricezione di una mail per estrarre l'evento con l'AI.</p>
+
+        <div class="space-y-3">
+          <div class="glass-card p-4 rounded-xl border-l-4 border-indigo-500 hover:bg-gray-800/50 transition cursor-pointer" onclick="estraiDaEmail('Esame Programmazione Web', '2026-11-10T10:00:00', 'Aula Magna, Università', 'Didattica')">
+            <div class="flex justify-between text-xs text-gray-400 mb-1">
+              <span>Segreteria Didattica</span>
+              <span>Oggi, 09:30</span>
+            </div>
+            <h3 class="font-semibold text-sm text-gray-200">Appello Esame Programmazione Web</h3>
+            <p class="text-xs text-gray-400 mt-1 line-clamp-2">Si avvisano gli studenti che l'esame si terrà il 10 Novembre 2026 alle ore 10:00 in Aula Magna.</p>
+          </div>
+
+          <div class="glass-card p-4 rounded-xl border-l-4 border-purple-500 hover:bg-gray-800/50 transition cursor-pointer" onclick="estraiDaEmail('Riunione Progetto Startup', '2026-11-12T15:30:00', 'Google Meet', 'Lavoro')">
+            <div class="flex justify-between text-xs text-gray-400 mb-1">
+              <span>Team Leader</span>
+              <span>Ieri, 17:45</span>
+            </div>
+            <h3 class="font-semibold text-sm text-gray-200">Review Progetto AutoCal</h3>
+            <p class="text-xs text-gray-400 mt-1 line-clamp-2">Incontro fissato per il 12 Novembre alle 15:30 su Google Meet per la presentazione finale.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Panel 2: PDF Parser -->
+    <section class="glass rounded-2xl p-6 flex flex-col justify-between">
+      <div>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="font-bold text-lg flex items-center gap-2 text-purple-400">
+            <i class="fa-solid fa-file-pdf"></i> Parser Circolari PDF
+          </h2>
+          <span class="text-xs bg-purple-500/20 text-purple-300 px-2.5 py-1 rounded-full border border-purple-500/30">Gemini OCR</span>
+        </div>
+        <p class="text-xs text-gray-400 mb-4">Carica un file PDF o simula la scansione per estrarre la data.</p>
+
+        <div class="border-2 border-dashed border-gray-700 hover:border-purple-500/50 rounded-xl p-6 text-center cursor-pointer transition" onclick="simulaScansionePDF()">
+          <i class="fa-solid fa-cloud-arrow-up text-3xl text-purple-400 mb-2"></i>
+          <p class="text-sm font-medium text-gray-300">Clicca per simulare caricamento PDF</p>
+          <p class="text-xs text-gray-500 mt-1">Estrarrà automaticamente il testo e l'evento</p>
+        </div>
+
+        <div id="pdfOutput" class="mt-4 hidden glass-card p-4 rounded-xl">
+          <div class="flex items-center gap-2 text-xs text-emerald-400 font-semibold mb-2">
+            <i class="fa-solid fa-circle-check"></i> Scansione AI Completata!
+          </div>
+          <pre id="jsonPreview" class="text-[11px] text-gray-300 bg-gray-950 p-3 rounded-lg overflow-x-auto font-mono border border-gray-800"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Panel 3: Live Calendar -->
+    <section class="glass rounded-2xl p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="font-bold text-lg flex items-center gap-2 text-emerald-400">
+          <i class="fa-solid fa-calendar-days"></i> Appuntamenti Estratti
+        </h2>
+        <button onclick="esportaICS()" class="text-xs bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 px-3 py-1.5 rounded-lg border border-emerald-500/30 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-download"></i> Esporta .ICS
+        </button>
+      </div>
+      <p class="text-xs text-gray-400 mb-4">Eventi inseriti in automatico dall'AI.</p>
+
+      <div id="eventList" class="space-y-3">
+        <!-- Eventi dinamici inseriti via JS -->
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let eventi = [
+      {
+        titolo: 'Presentazione Progetto AutoCal',
+        data: '2026-11-05T09:00:00',
+        luogo: 'Aula 3 - Polo Tecnologico',
+        categoria: 'Didattica'
+      }
+    ];
+
+    function mostraEventi() {
+      const container = document.getElementById('eventList');
+      container.innerHTML = '';
+
+      if (eventi.length === 0) {
+        container.innerHTML = `<p class="text-xs text-gray-500 text-center py-6">Nessun evento in agenda.</p>`;
+        return;
+      }
+
+      eventi.forEach((ev, idx) => {
+        const d = new Date(ev.data);
+        const dataFormattata = d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+        container.innerHTML += `
+          <div class="glass-card p-4 rounded-xl border-l-4 border-emerald-500 flex justify-between items-start">
+            <div>
+              <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">${ev.categoria}</span>
+              <h4 class="font-semibold text-sm text-gray-200 mt-1">${ev.titolo}</h4>
+              <p class="text-xs text-gray-400 mt-0.5"><i class="fa-regular fa-clock mr-1"></i>${dataFormattata}</p>
+              <p class="text-xs text-gray-400"><i class="fa-solid fa-location-dot mr-1"></i>${ev.luogo}</p>
+            </div>
+            <button onclick="rimuoviEvento(${idx})" class="text-gray-500 hover:text-red-400 text-xs p-1">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        `;
+      });
+    }
+
+    function estraiDaEmail(titolo, data, luogo, categoria) {
+      eventi.push({ titolo, data, luogo, categoria });
+      mostraEventi();
+      inviaNotificaPush('Nuovo Evento da Gmail', `${titolo} aggiunto a calendario per il ${new Date(data).toLocaleDateString('it-IT')}`);
+    }
+
+    function simulaScansionePDF() {
+      const nuovoEvento = {
+        titolo: 'Circolare N.42: Chiusura Straordinaria',
+        data: '2026-11-20T08:00:00',
+        luogo: 'Plesso Centrale',
+        categoria: 'Urgente'
+      };
+
+      const jsonOutput = {
+        status: "200 OK",
+        ai_engine: "Gemini 1.5 Flash OCR",
+        extracted_data: nuovoEvento
+      };
+
+      document.getElementById('pdfOutput').classList.remove('hidden');
+      document.getElementById('jsonPreview').textContent = JSON.stringify(jsonOutput, null, 2);
+
+      eventi.push(nuovoEvento);
+      mostraEventi();
+      inviaNotificaPush('Circolare PDF Elaborata', 'Chiusura Straordinaria aggiunta in agenda.');
+    }
+
+    function rimuoviEvento(index) {
+      eventi.splice(index, 1);
+      mostraEventi();
+    }
+
+    function richiediNotifiche() {
+      if ('Notification' in window) {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            inviaNotificaPush('AutoCal AI', 'Le notifiche push sono attive sul tuo dispositivo!');
+          } else {
+            alert('Notifiche non autorizzate nelle impostazioni del browser.');
+          }
+        });
+      }
+    }
+
+    function inviaNotificaPush(titolo, testo) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(titolo, {
+          body: testo,
+          icon: 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png'
+        });
+      }
+    }
+
+    function esportaICS() {
+      if (eventi.length === 0) return alert('Nessun evento da esportare!');
+
+      let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//AutoCal AI//IT\n";
+      eventi.forEach(ev => {
+        const d = new Date(ev.data).toISOString().replace(/-|:|\.\d\d\d/g, "");
+        icsContent += `BEGIN:VEVENT\nSUMMARY:${ev.titolo}\nLOCATION:${ev.luogo}\nDTSTART:${d}\nEND:VEVENT\n`;
+      });
+      icsContent += "END:VCALENDAR";
+
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = Window.URL.createObjectURL(blob);
+      link.setAttribute('download', 'appuntamenti_autocal.ics');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Inizializza service worker e lista eventi
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+    mostraEventi();
+  </script>
+</body>
+</html>
