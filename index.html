@@ -3,375 +3,244 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AutoCal AI Engine Ultra</title>
+  <title>AutoCal AI Engine</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#4f46e5">
+  <meta name="theme-color" content="#4F46E5">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- PDF.js library per la lettura dei file PDF reali -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  </script>
+  <!-- PDF.js per l'estrazione testo dai documenti -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-    body {
-      background-color: #f8fafc;
-      color: #0f172a;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-    .glass-light {
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(226, 232, 240, 0.8);
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
-    }
-    .card-aesthetic {
-      background: #ffffff;
-      border: 1px solid #f1f5f9;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
-      transition: all 0.2s ease-in-out;
-    }
-    .card-aesthetic:hover {
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.06);
-      transform: translateY(-2px);
-    }
-    .soft-shadow {
-      box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.08), 0 8px 10px -6px rgba(79, 70, 229, 0.04);
-    }
+    body { background-color: #f8fafc; font-family: 'Inter', sans-serif; }
   </style>
 </head>
-<body class="min-h-screen pb-12">
-  <!-- Intestazione -->
-  <header class="glass-light sticky top-0 z-50 px-6 py-4 flex justify-between items-center mb-8">
-    <div class="flex items-center gap-3">
-      <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl shadow-md">
-        <i class="fa-solid fa-calendar-check"></i>
-      </div>
-      <div>
-        <h1 class="font-bold text-xl tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">AutoCal AI</h1>
-        <p class="text-xs text-slate-500 font-medium">Gestore Appuntamenti & Notifiche Smart</p>
-      </div>
+<body class="min-h-screen flex flex-col items-center p-4 sm:p-6 text-slate-800">
+
+  <!-- Header -->
+  <header class="w-full max-w-xl flex justify-between items-center py-4 mb-6 border-b border-slate-200">
+    <div class="flex items-center space-x-2">
+      <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">A</div>
+      <h1 class="text-xl font-bold tracking-tight text-slate-900">AutoCal AI</h1>
     </div>
-    <button onclick="richiediNotifiche()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-2">
-      <i class="fa-solid fa-bell"></i> Attiva Notifiche
+    <button id="authBtn" onclick="handleAuth()" class="text-sm font-medium bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg shadow-sm hover:bg-slate-50 transition">
+      Connetti Google
     </button>
   </header>
 
-  <!-- Griglia Principale -->
-  <main class="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <!-- Main Container -->
+  <main class="w-full max-w-xl bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-6">
     
-    <!-- Colonna 1: Aggiungi Appuntamento Manuale & Gmail -->
-    <div class="space-y-6">
-      <!-- Modulo Nuovo Appuntamento -->
-      <section class="glass-light rounded-3xl p-6">
-        <h2 class="font-bold text-base flex items-center gap-2 text-indigo-600 mb-4">
-          <i class="fa-solid fa-plus-circle"></i> Nuovo Appuntamento
-        </h2>
-        <form id="appointmentForm" onsubmit="aggiungiManuale(event)" class="space-y-3">
-          <div>
-            <label class="block text-xs font-medium text-slate-600 mb-1">Titolo Evento</label>
-            <input type="text" id="titolo" required placeholder="Es. Visita Medica o Lezione" class="w-full text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Data e Ora</label>
-              <input type="datetime-local" id="dataOra" required class="w-full text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Categoria</label>
-              <select id="categoria" class="w-full text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
-                <option value="Lavoro">Lavoro</option>
-                <option value="Didattica">Didattica</option>
-                <option value="Personale">Personale</option>
-                <option value="Urgente">Urgente</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-600 mb-1">Luogo / Note</label>
-            <input type="text" id="luogo" placeholder="Es. Via Roma 12 o Google Meet" class="w-full text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
-          </div>
-          <button type="submit" class="w-full mt-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold py-3 rounded-xl transition shadow-sm flex items-center justify-center gap-2">
-            <i class="fa-solid fa-calendar-plus"></i> Inserisci nel Calendario
-          </button>
-        </form>
-      </section>
-
-      <!-- Simulatore Email -->
-      <section class="glass-light rounded-3xl p-6">
-        <div class="flex justify-between items-center mb-3">
-          <h2 class="font-bold text-base flex items-center gap-2 text-indigo-600">
-            <i class="fa-solid fa-envelope"></i> Simulatore Email Gmail
-          </h2>
-          <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-semibold border border-indigo-100">AI Pronta</span>
-        </div>
-        <p class="text-xs text-slate-500 mb-3">Clicca su una mail per importarla automaticamente nel calendario.</p>
-        
-        <div class="space-y-2">
-          <div onclick="estraiDaEmail('Esame Programmazione Web', '2026-11-10T10:00', 'Aula Magna', 'Didattica')" class="card-aesthetic p-3 rounded-2xl border-l-4 border-indigo-500 cursor-pointer">
-            <div class="flex justify-between text-[11px] text-slate-400 mb-0.5">
-              <span>Segreteria Didattica</span>
-              <span>09:30</span>
-            </div>
-            <h3 class="font-semibold text-xs text-slate-800">Appello Esame Programmazione</h3>
-            <p class="text-[11px] text-slate-500 mt-0.5">Fissato per il 10 Novembre alle ore 10:00 in Aula Magna.</p>
-          </div>
-
-          <div onclick="estraiDaEmail('Incontro Progetto AutoCal', '2026-11-12T15:30', 'Google Meet', 'Lavoro')" class="card-aesthetic p-3 rounded-2xl border-l-4 border-purple-500 cursor-pointer">
-            <div class="flex justify-between text-[11px] text-slate-400 mb-0.5">
-              <span>Team Leader</span>
-              <span>Ieri</span>
-            </div>
-            <h3 class="font-semibold text-xs text-slate-800">Review Presentazione Finale</h3>
-            <p class="text-[11px] text-slate-500 mt-0.5">Riunione il 12 Novembre alle 15:30 online su Google Meet.</p>
-          </div>
-        </div>
-      </section>
+    <div>
+      <h2 class="text-lg font-semibold text-slate-900">Analizza Documento o Email</h2>
+      <p class="text-sm text-slate-500 mt-1">Carica un PDF o incolla il testo di un'email per generare l'evento su Google Calendar.</p>
     </div>
 
-    <!-- Colonna 2: Lettore PDF Reale -->
-    <section class="glass-light rounded-3xl p-6 flex flex-col justify-between">
-      <div>
-        <div class="flex justify-between items-center mb-3">
-          <h2 class="font-bold text-base flex items-center gap-2 text-purple-600">
-            <i class="fa-solid fa-file-pdf"></i> Scansione Circolari PDF
-          </h2>
-          <span class="text-[10px] bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full font-semibold border border-purple-100">Parser Reale</span>
-        </div>
-        <p class="text-xs text-slate-500 mb-4">Carica un file PDF dal tuo dispositivo. L'app ne leggerà il testo ed estrarrà l'appuntamento.</p>
+    <!-- Upload PDF -->
+    <div class="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-indigo-400 transition bg-slate-50/50">
+      <input type="file" id="pdfInput" accept="application/pdf" class="hidden" onchange="handleFileSelect(event)">
+      <label for="pdfInput" class="cursor-pointer flex flex-col items-center">
+        <svg class="w-10 h-10 text-indigo-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+        </svg>
+        <span class="text-sm font-medium text-slate-700" id="fileName">Seleziona o trascina un file PDF</span>
+        <span class="text-xs text-slate-400 mt-1">Supporta PDF nativi</span>
+      </label>
+    </div>
 
-        <input type="file" id="pdfFileInput" accept="application/pdf" class="hidden" onchange="gestisciFilePDF(event)">
+    <div class="flex items-center my-2">
+      <div class="flex-grow border-t border-slate-200"></div>
+      <span class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Oppure</span>
+      <div class="flex-grow border-t border-slate-200"></div>
+    </div>
 
-        <div onclick="document.getElementById('pdfFileInput').click()" class="border-2 border-dashed border-slate-200 hover:border-purple-400 bg-slate-50/50 hover:bg-purple-50/30 rounded-2xl p-6 text-center cursor-pointer transition">
-          <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
-            <i class="fa-solid fa-file-arrow-up text-xl"></i>
-          </div>
-          <p class="text-xs font-semibold text-slate-700">Seleziona e Carica un file PDF vero</p>
-          <p class="text-[11px] text-slate-400 mt-1">Legge la prima data presente nel testo del PDF</p>
-        </div>
+    <!-- Area Testo Manuale -->
+    <div>
+      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Testo dell'email / nota</label>
+      <textarea id="textInput" rows="4" placeholder="Es: Riunione di progetto fissata per domani alle 15:30 su Google Meet..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"></textarea>
+    </div>
 
-        <div id="pdfOutput" class="mt-4 hidden card-aesthetic p-4 rounded-2xl bg-slate-900 text-white">
-          <div class="flex items-center gap-2 text-xs text-emerald-400 font-semibold mb-2">
-            <i class="fa-solid fa-circle-check"></i> Testo Estratto dal PDF!
-          </div>
-          <p id="pdfFileName" class="text-xs font-bold text-slate-300 mb-2"></p>
-          <pre id="jsonPreview" class="text-[10px] text-slate-300 font-mono overflow-x-auto max-h-40"></pre>
-        </div>
+    <!-- Pulsante Analizza -->
+    <button id="processBtn" onclick="processInput()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-xl shadow-sm transition flex items-center justify-center gap-2">
+      <span>Analizza con Gemini AI</span>
+    </button>
+
+    <!-- Card Risultato AI -->
+    <div id="resultCard" class="hidden border border-indigo-100 bg-indigo-50/50 p-5 rounded-xl space-y-3">
+      <div class="flex justify-between items-start">
+        <h3 id="eventTitle" class="font-bold text-slate-900 text-base"></h3>
+        <span id="eventCategory" class="px-2 py-1 text-xs font-semibold bg-indigo-100 text-indigo-700 rounded-md"></span>
+      </div>
+      <div class="text-sm text-slate-600 space-y-1">
+        <p>📅 <span id="eventDate" class="font-medium text-slate-800"></span></p>
+        <p>📍 <span id="eventLocation" class="font-medium text-slate-800"></span></p>
       </div>
 
-      <div class="mt-6 p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100/80">
-        <div class="flex items-center gap-2 text-xs font-semibold text-indigo-900 mb-1">
-          <i class="fa-solid fa-lightbulb text-indigo-600"></i> Come funziona la lettura PDF:
-        </div>
-        <p class="text-[11px] text-indigo-700/80 leading-relaxed">
-          Ora il selettore apre i file reali del tuo computer o telefono. La libreria PDF.js analizza le parole e inserisce la circolare in agenda!
-        </p>
-      </div>
-    </section>
+      <button id="saveBtn" onclick="saveToGoogleCalendar()" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg shadow-sm transition text-sm">
+        Sincronizza su Google Calendar
+      </button>
+    </div>
 
-    <!-- Colonna 3: Agenda e Calendario -->
-    <section class="glass-light rounded-3xl p-6 soft-shadow">
-      <div class="flex justify-between items-center mb-4">
-        <div>
-          <h2 class="font-bold text-base text-slate-900">Il Tuo Calendario</h2>
-          <p class="text-xs text-slate-400">Tutti gli appuntamenti salvati</p>
-        </div>
-        <button onclick="esportaICS()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1.5">
-          <i class="fa-solid fa-download"></i> Esporta .ICS
-        </button>
-      </div>
-
-      <div id="eventList" class="space-y-3">
-        <!-- Eventi inseriti dinamicamente via JS -->
-      </div>
-    </section>
+    <!-- Stato / Log dinamico -->
+    <div id="statusText" class="text-center text-xs font-medium text-slate-500 min-h-[20px]"></div>
 
   </main>
 
   <script>
-    let eventi = [
-      {
-        titolo: 'Presentazione Progetto AutoCal',
-        data: '2026-11-05T09:00',
-        luogo: 'Aula 3 - Polo Tecnologico',
-        categoria: 'Didattica'
+    const BACKEND_URL = "https://autocal-backend.onrender.com"; // Il tuo server Live su Render
+    let extractedText = "";
+    let parsedEventData = null;
+    let userAccessToken = null;
+    let tokenClient = null;
+
+    // Configurazione Google OAuth Client ID
+    const GOOGLE_CLIENT_ID = "IL_TUO_CLIENT_ID.apps.googleusercontent.com"; // Inserisci il tuo Client ID
+
+    window.onload = () => {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+      if (window.google) {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: 'https://www.googleapis.com/auth/calendar.events',
+          callback: (tokenResponse) => {
+            if (tokenResponse.access_token) {
+              userAccessToken = tokenResponse.access_token;
+              document.getElementById('authBtn').innerText = "Account Connesso ✓";
+              document.getElementById('authBtn').classList.replace('text-slate-700', 'text-emerald-700');
+              showStatus("Autenticato con successo su Google!");
+            }
+          },
+        });
       }
-    ];
+    };
 
-    function mostraEventi() {
-      const container = document.getElementById('eventList');
-      container.innerHTML = '';
+    function handleAuth() {
+      if (tokenClient) {
+        tokenClient.requestAccessToken();
+      } else {
+        alert("Librerie Google in caricamento, riprova tra qualche secondo.");
+      }
+    }
 
-      if (eventi.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-12">
-            <i class="fa-regular fa-calendar-xmark text-3xl text-slate-300 mb-2"></i>
-            <p class="text-xs text-slate-400">Nessun appuntamento in agenda.</p>
-          </div>
-        `;
+    // Estrazione testo da file PDF
+    async function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      document.getElementById('fileName').innerText = file.name;
+      showStatus("Lettura file PDF in corso...");
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let textContent = "";
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          textContent += content.items.map(item => item.str).join(" ") + "\n";
+        }
+
+        extractedText = textContent;
+        showStatus("PDF letto correttamente. Clicca su 'Analizza con Gemini AI'");
+      } catch (err) {
+        console.error("Errore lettura PDF:", err);
+        showStatus("Impossibile leggere il file PDF.", true);
+      }
+    }
+
+    // Invio testo al backend (Gemini API)
+    async function processInput() {
+      const manualText = document.getElementById('textInput').value.trim();
+      const textToAnalyze = manualText || extractedText;
+
+      if (!textToAnalyze) {
+        showStatus("Inserisci del testo o carica un file PDF prima di procedere.", true);
         return;
       }
 
-      eventi.sort((a, b) => new Date(a.data) - new Date(b.data));
+      showStatus("Analisi in corso con Gemini 1.5 Flash...");
+      document.getElementById('processBtn').disabled = true;
 
-      eventi.forEach((ev, idx) => {
-        const d = new Date(ev.data);
-        const dataFormattata = isNaN(d) ? ev.data : d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/parse-document`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ testoDocumento: textToAnalyze })
+        });
 
-        let badgeColor = "bg-slate-100 text-slate-600 border-slate-200";
-        if (ev.categoria === 'Urgente') badgeColor = "bg-rose-50 text-rose-600 border-rose-200";
-        if (ev.categoria === 'Didattica') badgeColor = "bg-indigo-50 text-indigo-600 border-indigo-200";
-        if (ev.categoria === 'Lavoro') badgeColor = "bg-purple-50 text-purple-600 border-purple-200";
+        const data = await response.json();
 
-        container.innerHTML += `
-          <div class="card-aesthetic p-4 rounded-2xl flex justify-between items-start">
-            <div class="space-y-1">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border ${badgeColor}">${ev.categoria}</span>
-              <h4 class="font-bold text-xs text-slate-800 pt-1">${ev.titolo}</h4>
-              <p class="text-[11px] text-slate-500 flex items-center gap-1.5">
-                <i class="fa-regular fa-clock text-indigo-500"></i> ${dataFormattata}
-              </p>
-              ${ev.luogo ? `<p class="text-[11px] text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-location-dot text-indigo-400"></i> ${ev.luogo}</p>` : ''}
-            </div>
-            <button onclick="rimuoviEvento(${idx})" class="text-slate-300 hover:text-rose-500 text-xs p-1 transition">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        `;
-      });
+        if (data.success && data.evento) {
+          parsedEventData = data.evento;
+          renderEventCard(parsedEventData);
+          showStatus("Analisi completata con successo!");
+        } else {
+          showStatus("Errore nell'estrazione dei dati con l'AI.", true);
+        }
+      } catch (err) {
+        console.error("Errore chiamata backend:", err);
+        showStatus("Errore di connessione con il server backend.", true);
+      } finally {
+        document.getElementById('processBtn').disabled = false;
+      }
     }
 
-    function gestisciFilePDF(e) {
-      const file = e.target.files[0];
-      if (!file) return;
+    function renderEventCard(evento) {
+      document.getElementById('eventTitle').innerText = evento.titolo || "Evento Senza Titolo";
+      document.getElementById('eventCategory').innerText = evento.categoria || "Generale";
+      document.getElementById('eventDate').innerText = evento.dataOra ? new Date(evento.dataOra).toLocaleString('it-IT') : "Data da definire";
+      document.getElementById('eventLocation').innerText = evento.luogo || "Nessun luogo specificato";
+      document.getElementById('resultCard').classList.remove('hidden');
+    }
 
-      document.getElementById('pdfOutput').classList.remove('hidden');
-      document.getElementById('pdfFileName').textContent = "File: " + file.name;
-      document.getElementById('jsonPreview').textContent = "Lettura ed estrazione testo in corso...";
+    // Salva l'evento via Backend su Google Calendar
+    async function saveToGoogleCalendar() {
+      if (!userAccessToken) {
+        alert("Prima devi connettere il tuo account Google cliccando in alto su 'Connetti Google'!");
+        handleAuth();
+        return;
+      }
 
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const typedarray = new Uint8Array(evt.target.result);
-        pdfjsLib.getDocument(typedarray).promise.then(pdf => {
-          let testoCompleto = "";
-          let pagineLette = 0;
+      if (!parsedEventData) return;
 
-          for (let i = 1; i <= pdf.numPages; i++) {
-            pdf.getPage(i).then(page => {
-              page.getTextContent().then(textContent => {
-                const testoPagina = textContent.items.map(s => s.str).join(" ");
-                testoCompleto += testoPagina + "\n";
-                pagineLette++;
+      showStatus("Salvataggio dell'evento su Google Calendar...");
 
-                if (pagineLette === pdf.numPages) {
-                  analizzaEStraiDataPDF(file.name, testoCompleto);
-                }
-              });
-            });
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/add-to-google-calendar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userAccessToken: userAccessToken,
+            evento: parsedEventData
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showStatus("Evento sincronizzato su Google Calendar! 🎉");
+          if (data.calendarLink) {
+            window.open(data.calendarLink, '_blank');
           }
-        });
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    function analizzaEStraiDataPDF(nomeFile, testo) {
-      // Cerca date nel formato GG/MM/AAAA o GG-MM-AAAA
-      const dataRegex = /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/;
-      const match = testo.match(dataRegex);
-
-      let dataEstratta = '2026-11-25T09:00'; // Data di fallback se nel PDF non viene rilevata una data esplicita
-      if (match) {
-        const giorno = match[1].padStart(2, '0');
-        const mese = match[2].padStart(2, '0');
-        const anno = match[3];
-        dataEstratta = `${anno}-${mese}-${giorno}T09:00`;
-      }
-
-      const nuovoEvento = {
-        titolo: nomeFile.replace('.pdf', ''),
-        data: dataEstratta,
-        luogo: 'Estratto da PDF',
-        categoria: 'Urgente'
-      };
-
-      document.getElementById('jsonPreview').textContent = `--- Testo Estratto ---\n${testo.substring(0, 300)}...\n\n--- Appuntamento creato ---\n` + JSON.stringify(nuovoEvento, null, 2);
-
-      eventi.push(nuovoEvento);
-      mostraEventi();
-      inviaNotificaPush('Circolare PDF Analizzata', `${nuovoEvento.titolo} è stata salvata in agenda.`);
-    }
-
-    function aggiungiManuale(event) {
-      event.preventDefault();
-      const titolo = document.getElementById('titolo').value;
-      const data = document.getElementById('dataOra').value;
-      const categoria = document.getElementById('categoria').value;
-      const luogo = document.getElementById('luogo').value;
-
-      eventi.push({ titolo, data, luogo, categoria });
-      mostraEventi();
-
-      inviaNotificaPush('Nuovo Appuntamento Inserito', `${titolo} aggiunto con successo al calendario.`);
-      document.getElementById('appointmentForm').reset();
-    }
-
-    function estraiDaEmail(titolo, data, luogo, categoria) {
-      eventi.push({ titolo, data, luogo, categoria });
-      mostraEventi();
-      inviaNotificaPush('Evento Estratto da Gmail', `${titolo} aggiunto per il ${new Date(data).toLocaleDateString('it-IT')}`);
-    }
-
-    function rimuoviEvento(index) {
-      eventi.splice(index, 1);
-      mostraEventi();
-    }
-
-    function richiediNotifiche() {
-      if ('Notification' in window) {
-        Notification.requestPermission().then(permission => {
-          if (permission === 'granted') {
-            inviaNotificaPush('AutoCal AI Engine', 'Le notifiche push sono ora attive!');
-          } else {
-            alert('Notifiche non autorizzate nelle impostazioni del browser.');
-          }
-        });
+        } else {
+          showStatus("Errore durante il salvataggio su Calendar.", true);
+        }
+      } catch (err) {
+        console.error(err);
+        showStatus("Errore di comunicazione con il server per Calendar.", true);
       }
     }
 
-    function inviaNotificaPush(titolo, testo) {
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(titolo, {
-          body: testo,
-          icon: 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png'
-        });
-      }
+    function showStatus(msg, isError = false) {
+      const el = document.getElementById('statusText');
+      el.innerText = msg;
+      el.className = `text-center text-xs font-medium ${isError ? 'text-red-500' : 'text-slate-500'}`;
     }
-
-    function esportaICS() {
-      if (eventi.length === 0) return alert('Nessun evento presente da esportare!');
-
-      let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//AutoCal AI//IT\n";
-      eventi.forEach(ev => {
-        const d = new Date(ev.data).toISOString().replace(/-|:|\.\d\d\d/g, "");
-        icsContent += `BEGIN:VEVENT\nSUMMARY:${ev.titolo}\nLOCATION:${ev.luogo || ''}\nDTSTART:${d}\nEND:VEVENT\n`;
-      });
-      icsContent += "END:VCALENDAR";
-
-      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = Window.URL.createObjectURL(blob);
-      link.setAttribute('download', 'appuntamenti_autocal.ics');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
-    }
-    mostraEventi();
   </script>
 </body>
+</html>
 </html>
 </html>
   </script>
