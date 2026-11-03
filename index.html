@@ -8,6 +8,11 @@
   <meta name="theme-color" content="#4f46e5">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- PDF.js library per la lettura dei file PDF reali -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  </script>
   <style>
     body {
       background-color: #f8fafc;
@@ -100,7 +105,7 @@
           </h2>
           <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-semibold border border-indigo-100">AI Pronta</span>
         </div>
-        <p class="text-xs text-slate-500 mb-3">Clicca su una mail di prova per estrarre l'appuntamento automaticamente.</p>
+        <p class="text-xs text-slate-500 mb-3">Clicca su una mail per importarla automaticamente nel calendario.</p>
         
         <div class="space-y-2">
           <div onclick="estraiDaEmail('Esame Programmazione Web', '2026-11-10T10:00', 'Aula Magna', 'Didattica')" class="card-aesthetic p-3 rounded-2xl border-l-4 border-indigo-500 cursor-pointer">
@@ -124,39 +129,42 @@
       </section>
     </div>
 
-    <!-- Colonna 2: Parser Circolari PDF -->
+    <!-- Colonna 2: Lettore PDF Reale -->
     <section class="glass-light rounded-3xl p-6 flex flex-col justify-between">
       <div>
         <div class="flex justify-between items-center mb-3">
           <h2 class="font-bold text-base flex items-center gap-2 text-purple-600">
             <i class="fa-solid fa-file-pdf"></i> Scansione Circolari PDF
           </h2>
-          <span class="text-[10px] bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full font-semibold border border-purple-100">Gemini OCR</span>
+          <span class="text-[10px] bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full font-semibold border border-purple-100">Parser Reale</span>
         </div>
-        <p class="text-xs text-slate-500 mb-4">Simula la lettura automatica di una circolare scolastica o d'ufficio.</p>
+        <p class="text-xs text-slate-500 mb-4">Carica un file PDF dal tuo dispositivo. L'app ne leggerà il testo ed estrarrà l'appuntamento.</p>
 
-        <div onclick="simulaScansionePDF()" class="border-2 border-dashed border-slate-200 hover:border-purple-300 bg-slate-50/50 hover:bg-purple-50/30 rounded-2xl p-6 text-center cursor-pointer transition">
+        <input type="file" id="pdfFileInput" accept="application/pdf" class="hidden" onchange="gestisciFilePDF(event)">
+
+        <div onclick="document.getElementById('pdfFileInput').click()" class="border-2 border-dashed border-slate-200 hover:border-purple-400 bg-slate-50/50 hover:bg-purple-50/30 rounded-2xl p-6 text-center cursor-pointer transition">
           <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
-            <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+            <i class="fa-solid fa-file-arrow-up text-xl"></i>
           </div>
-          <p class="text-xs font-semibold text-slate-700">Clicca qui per caricare una circolare PDF</p>
-          <p class="text-[11px] text-slate-400 mt-1">L'AI estrarrà dati, data e orario automaticamente</p>
+          <p class="text-xs font-semibold text-slate-700">Seleziona e Carica un file PDF vero</p>
+          <p class="text-[11px] text-slate-400 mt-1">Legge la prima data presente nel testo del PDF</p>
         </div>
 
         <div id="pdfOutput" class="mt-4 hidden card-aesthetic p-4 rounded-2xl bg-slate-900 text-white">
           <div class="flex items-center gap-2 text-xs text-emerald-400 font-semibold mb-2">
-            <i class="fa-solid fa-circle-check"></i> Elaborazione AI Completata!
+            <i class="fa-solid fa-circle-check"></i> Testo Estratto dal PDF!
           </div>
-          <pre id="jsonPreview" class="text-[10px] text-slate-300 font-mono overflow-x-auto"></pre>
+          <p id="pdfFileName" class="text-xs font-bold text-slate-300 mb-2"></p>
+          <pre id="jsonPreview" class="text-[10px] text-slate-300 font-mono overflow-x-auto max-h-40"></pre>
         </div>
       </div>
 
       <div class="mt-6 p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100/80">
         <div class="flex items-center gap-2 text-xs font-semibold text-indigo-900 mb-1">
-          <i class="fa-solid fa-lightbulb text-indigo-600"></i> Suggerimento Pro
+          <i class="fa-solid fa-lightbulb text-indigo-600"></i> Come funziona la lettura PDF:
         </div>
         <p class="text-[11px] text-indigo-700/80 leading-relaxed">
-          Tutti gli appuntamenti aggiunti (manuali, da email o PDF) vengono memorizzati e possono essere scaricati nel telefono in formato `.ICS`.
+          Ora il selettore apre i file reali del tuo computer o telefono. La libreria PDF.js analizza le parole e inserisce la circolare in agenda!
         </p>
       </div>
     </section>
@@ -204,7 +212,6 @@
         return;
       }
 
-      // Ordina gli eventi per data
       eventi.sort((a, b) => new Date(a.data) - new Date(b.data));
 
       eventi.forEach((ev, idx) => {
@@ -234,6 +241,66 @@
       });
     }
 
+    function gestisciFilePDF(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      document.getElementById('pdfOutput').classList.remove('hidden');
+      document.getElementById('pdfFileName').textContent = "File: " + file.name;
+      document.getElementById('jsonPreview').textContent = "Lettura ed estrazione testo in corso...";
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const typedarray = new Uint8Array(evt.target.result);
+        pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+          let testoCompleto = "";
+          let pagineLette = 0;
+
+          for (let i = 1; i <= pdf.numPages; i++) {
+            pdf.getPage(i).then(page => {
+              page.getTextContent().then(textContent => {
+                const testoPagina = textContent.items.map(s => s.str).join(" ");
+                testoCompleto += testoPagina + "\n";
+                pagineLette++;
+
+                if (pagineLette === pdf.numPages) {
+                  analizzaEStraiDataPDF(file.name, testoCompleto);
+                }
+              });
+            });
+          }
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function analizzaEStraiDataPDF(nomeFile, testo) {
+      // Cerca date nel formato GG/MM/AAAA o GG-MM-AAAA
+      const dataRegex = /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/;
+      const match = testo.match(dataRegex);
+
+      let dataEstratta = '2026-11-25T09:00'; // Data di fallback se nel PDF non viene rilevata una data esplicita
+      if (match) {
+        const giorno = match[1].padStart(2, '0');
+        const mese = match[2].padStart(2, '0');
+        const anno = match[3];
+        dataEstratta = `${anno}-${mese}-${giorno}T09:00`;
+      }
+
+      const nuovoEvento = {
+        titolo: nomeFile.replace('.pdf', ''),
+        data: dataEstratta,
+        luogo: 'Estratto da PDF',
+        categoria: 'Urgente'
+      };
+
+      document.getElementById('jsonPreview').textContent = `--- Testo Estratto ---\n${testo.substring(0, 300)}...\n\n--- Appuntamento creato ---\n` + JSON.stringify(nuovoEvento, null, 2);
+
+      eventi.push(nuovoEvento);
+      mostraEventi();
+      inviaNotificaPush('Circolare PDF Analizzata', `${nuovoEvento.titolo} è stata salvata in agenda.`);
+    }
+
     function aggiungiManuale(event) {
       event.preventDefault();
       const titolo = document.getElementById('titolo').value;
@@ -244,7 +311,7 @@
       eventi.push({ titolo, data, luogo, categoria });
       mostraEventi();
 
-      inviaNotificaPush('Nuovo Appuntamento Inserito', `${titolo} è stato aggiunto con successo al calendario.`);
+      inviaNotificaPush('Nuovo Appuntamento Inserito', `${titolo} aggiunto con successo al calendario.`);
       document.getElementById('appointmentForm').reset();
     }
 
@@ -252,26 +319,6 @@
       eventi.push({ titolo, data, luogo, categoria });
       mostraEventi();
       inviaNotificaPush('Evento Estratto da Gmail', `${titolo} aggiunto per il ${new Date(data).toLocaleDateString('it-IT')}`);
-    }
-
-    function simulaScansionePDF() {
-      const nuovoEvento = {
-        titolo: 'Circolare N.42: Chiusura Plesso',
-        data: '2026-11-20T08:00',
-        luogo: 'Sede Centrale',
-        categoria: 'Urgente'
-      };
-
-      document.getElementById('pdfOutput').classList.remove('hidden');
-      document.getElementById('jsonPreview').textContent = JSON.stringify({
-        stato: "Successo 200",
-        ai_engine: "Gemini OCR Italian Parser",
-        dati_estratti: nuovoEvento
-      }, null, 2);
-
-      eventi.push(nuovoEvento);
-      mostraEventi();
-      inviaNotificaPush('Circolare PDF Elaborata', 'Circolare salvata in agenda.');
     }
 
     function rimuoviEvento(index) {
@@ -325,6 +372,7 @@
     mostraEventi();
   </script>
 </body>
+</html>
 </html>
   </script>
 </body>
